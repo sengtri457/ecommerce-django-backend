@@ -149,8 +149,9 @@ class CheckoutService:
             bakong_account = getattr(settings, 'BAKONG_ACCOUNT_ID', 'clothes@abaa')
             merchant_name = getattr(settings, 'BAKONG_MERCHANT_NAME', 'Clothes Apparel Co')
             merchant_city = getattr(settings, 'BAKONG_MERCHANT_CITY', 'Phnom Penh')
+            phone_number = getattr(settings, 'BAKONG_PHONE_NUMBER', '')
 
-            # Generate EMVCo compliant Dynamic KHQR payload
+            # Generate EMVCo compliant Dynamic KHQR payload using loaded merchant credentials
             payload = generate_khqr_payload(
                 bakong_account_id=bakong_account,
                 merchant_name=merchant_name,
@@ -158,7 +159,8 @@ class CheckoutService:
                 amount=total_usd,
                 currency='USD',
                 bill_number=order.order_number,
-                store_label='Clothes'
+                store_label=merchant_name,
+                phone_number=phone_number,
             )
             md5_hash = generate_khqr_md5(payload)
 
