@@ -2,6 +2,7 @@
 Django settings for ecommerce-django-backend.
 """
 
+import os
 from pathlib import Path
 from decimal import Decimal
 
@@ -127,8 +128,8 @@ KHR_EXCHANGE_RATE = 4100
 DEFAULT_TAX_RATE = Decimal('0.10') # 10% VAT
 
 # National Bank of Cambodia (NBC) Bakong KHQR Settings
-BAKONG_ACCOUNT_ID = 'clothes@abaa'              # Your official merchant Bakong ID
-BAKONG_MERCHANT_NAME = 'Clothes Apparel Co'     # Official trading name (max 25 chars)
-BAKONG_MERCHANT_CITY = 'Phnom Penh'             # Registered city
-BAKONG_API_URL = 'https://api-bakong.nbc.gov.kh/v1/'
-BAKONG_API_TOKEN = ''                           # Secret token issued by NBC/Bank
+BAKONG_ACCOUNT_ID = os.environ.get('BAKONG_ACCOUNT_ID', 'clothes@abaa')              # Your official merchant Bakong ID
+BAKONG_MERCHANT_NAME = os.environ.get('BAKONG_MERCHANT_NAME', 'Clothes Apparel Co')     # Official trading name (max 25 chars)
+BAKONG_MERCHANT_CITY = os.environ.get('BAKONG_MERCHANT_CITY', 'Phnom Penh')             # Registered city
+BAKONG_API_URL = os.environ.get('BAKONG_API_URL', 'https://api-bakong.nbc.gov.kh/v1/')
+BAKONG_API_TOKEN = os.environ.get('BAKONG_API_TOKEN', '')                           # Secret token issued by NBC/Bank

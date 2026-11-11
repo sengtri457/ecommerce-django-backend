@@ -1,4 +1,5 @@
 import hashlib
+import time
 from decimal import Decimal
 
 def crc16_ccitt(data: str) -> str:
@@ -29,57 +30,96 @@ def generate_khqr_payload(
     amount: Decimal,
     currency: str = "USD",
     bill_number: str = "",
-    store_label: str = "Clothes"
+    store_label: str = "Clothes",
+    phone_number: str = "",
+    terminal_label: str = "",
+    expiration_days: int = 1,
 ) -> str:
     """
     Constructs an EMVCo-compliant Dynamic Bakong KHQR string payload.
-    Supports both USD (Currency Code 840) and KHR (Currency Code 116).
+    Conforms strictly to National Bank of Cambodia (NBC) KHQR standards:
+    - Root Tag 00: EMVCo Payload Format Indicator ('01')
+    - Root Tag 01: Initiation method ('12' = Dynamic QR)
+    - Root Tag 29: Merchant Account Information (Individual/Solo account ID in subtag 00)
+    - Root Tag 52: MCC 5999 (Apparel & Retail)
+    - Root Tag 53: Currency (840 = USD, 116 = KHR)
+    - Root Tag 54: Amount without trailing zero padding
+    - Root Tag 58: Country 'KH'
+    - Root Tag 59: Merchant Name
+    - Root Tag 60: Merchant City
+    - Root Tag 62: Additional Data Field (Store label, Bill/Order number, Mobile)
+    - Root Tag 99: NBC Timestamp & Expiry timestamp in milliseconds
+    - Root Tag 63: CRC-16/CCITT checksum
     """
-    # Root Tag 00: Payload Format Indicator (Fixed to "01")
-    payload = format_tlv("00", "01")
+    try:
+        from bakong_khqr import KHQR
+        k = KHQR()
+        res = k.create_qr(
+            amount=float(amount),
+            account_id=bakong_account_id,
+            merchant_name=merchant_name[:25],
+            merchant_city=merchant_city[:15],
+            currency=currency.upper(),
+            store_label=store_label[:25] if store_label else None,
+            phone_number=phone_number if phone_number else None,
+            bill_number=bill_number[:25] if bill_number else None,
+            terminal_label=terminal_label if terminal_label else None,
+            expiration=expiration_days,
+        )
+        return res.qr
+    except Exception:
+        pass
 
-    # Root Tag 01: Point of Initiation Method (12 = Dynamic QR with pre-locked amount)
+    # Built-in pure-Python fallback strictly following NBC KHQR EMVCo spec:
+    payload = format_tlv("00", "01")
     payload += format_tlv("01", "12")
 
-    # Root Tag 29: Merchant Account Information for Bakong
+    # Tag 29: Individual Account Info (Sub-tag 00 holds the Bakong Account ID)
     sub_tag_00 = format_tlv("00", bakong_account_id)
-    sub_tag_01 = format_tlv("01", store_label)
-    payload += format_tlv("29", sub_tag_00 + sub_tag_01)
+    payload += format_tlv("29", sub_tag_00)
 
-    # Root Tag 52: Merchant Category Code (5999 for miscellaneous retail / apparel)
+    # Tag 52: Merchant Category Code (5999)
     payload += format_tlv("52", "5999")
 
-    # Root Tag 53: Transaction Currency (840 = USD, 116 = KHR)
+    # Tag 53: Transaction Currency (840 = USD, 116 = KHR)
     currency_code = "840" if currency.upper() == "USD" else "116"
     payload += format_tlv("53", currency_code)
 
-    # Root Tag 54: Transaction Amount
-    if currency_code == "840":
-        amount_str = f"{amount:.2f}"
-    else:
-        amount_str = f"{int(amount)}"
+    # Tag 54: Transaction Amount (stripped trailing zeros per NBC spec)
+    amount_float = float(amount)
+    amount_str = f"{amount_float:.2f}".rstrip("0").rstrip(".")
     payload += format_tlv("54", amount_str)
 
-    # Root Tag 58: Country Code (Fixed to "KH")
+    # Tag 58: Country Code (Fixed to 'KH')
     payload += format_tlv("58", "KH")
 
-    # Root Tag 59: Merchant Name
+    # Tag 59: Merchant Name
     payload += format_tlv("59", merchant_name[:25])
 
-    # Root Tag 60: Merchant City
+    # Tag 60: Merchant City
     payload += format_tlv("60", merchant_city[:15])
 
-    # Root Tag 62: Additional Data Field (Bill/Order Number, Mobile, Purpose)
+    # Tag 62: Additional Data Field
     add_data = ""
+    if store_label:
+        add_data += format_tlv("03", store_label[:25])
     if bill_number:
         add_data += format_tlv("01", bill_number[:25])
-    add_data += format_tlv("03", store_label[:25])
-    payload += format_tlv("62", add_data)
+    if phone_number:
+        add_data += format_tlv("02", phone_number[:25])
+    if add_data:
+        payload += format_tlv("62", add_data)
 
-    # Root Tag 63: Checksum placeholder and CRC16 calculation
+    # Tag 99: NBC Timestamp & Expiry in milliseconds
+    now_ms = int(time.time() * 1000)
+    exp_ms = now_ms + (expiration_days * 86400 * 1000)
+    tag_99_sub00 = format_tlv("00", str(now_ms))
+    tag_99_sub01 = format_tlv("01", str(exp_ms))
+    payload += format_tlv("99", tag_99_sub00 + tag_99_sub01)
+
+    # Tag 63: Checksum
     pre_crc = payload + "6304"
     crc_hex = crc16_ccitt(pre_crc)
-
     return pre_crc + crc_hex
 
 def generate_khqr_md5(payload: str) -> str:
