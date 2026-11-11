@@ -70,7 +70,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
-# Normalized SQLite for zero-friction local development, easily switchable to Postgres
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -104,7 +103,6 @@ TIME_ZONE = 'Asia/Phnom_Penh'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
@@ -127,3 +125,10 @@ REST_FRAMEWORK = {
 # Currency configuration for Cambodia
 KHR_EXCHANGE_RATE = 4100
 DEFAULT_TAX_RATE = Decimal('0.10') # 10% VAT
+
+# National Bank of Cambodia (NBC) Bakong KHQR Settings
+BAKONG_ACCOUNT_ID = 'clothes@abaa'              # Your official merchant Bakong ID
+BAKONG_MERCHANT_NAME = 'Clothes Apparel Co'     # Official trading name (max 25 chars)
+BAKONG_MERCHANT_CITY = 'Phnom Penh'             # Registered city
+BAKONG_API_URL = 'https://api-bakong.nbc.gov.kh/v1/'
+BAKONG_API_TOKEN = ''                           # Secret token issued by NBC/Bank
