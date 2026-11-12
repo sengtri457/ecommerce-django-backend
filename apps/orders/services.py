@@ -68,8 +68,8 @@ class CheckoutService:
                 'line_total': line_total,
             })
 
-        # Complimentary shipping threshold ($100 USD)
-        if subtotal >= Decimal('100.00'):
+        # Phnom Penh Standard is Free; or complimentary shipping threshold ($100 USD)
+        if shipping_method.code == 'phnom_penh_standard' or subtotal >= Decimal('100.00'):
             shipping_cost = Decimal('0.00')
         else:
             shipping_cost = shipping_method.rate_usd
