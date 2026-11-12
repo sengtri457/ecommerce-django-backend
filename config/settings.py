@@ -22,7 +22,7 @@ try:
         BASE_DIR.parent.parent / 'ec-online-shop' / '.env',
     ]:
         if env_candidate.exists():
-            load_dotenv(env_candidate, override=False)
+            load_dotenv(env_candidate, override=True)
 except Exception:
     pass
 
