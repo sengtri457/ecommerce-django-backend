@@ -24,8 +24,8 @@ class Command(BaseCommand):
             },
             {
                 'code': 'phnom_penh_standard',
-                'name': 'Phnom Penh Standard (Next Day Delivery)',
-                'rate_usd': Decimal('1.50'),
+                'name': 'Phnom Penh Standard (Next Day Delivery - Free)',
+                'rate_usd': Decimal('0.00'),
                 'estimated_delivery_days': '24 hours',
             },
             {

@@ -8,6 +8,7 @@ from apps.catalog.models import ProductVariant
 from apps.inventory.models import StockMovement
 from apps.orders.models import Order, OrderItem, ShippingMethod
 from apps.payments.models import Payment, PaymentTransaction
+from apps.payments.khqr import generate_khqr_payload, generate_khqr_md5
 
 class CheckoutService:
     @classmethod
@@ -67,8 +68,8 @@ class CheckoutService:
                 'line_total': line_total,
             })
 
-        # Complimentary shipping threshold ($100 USD)
-        if subtotal >= Decimal('100.00'):
+        # Phnom Penh Standard is Free; or complimentary shipping threshold ($100 USD)
+        if shipping_method.code == 'phnom_penh_standard' or subtotal >= Decimal('100.00'):
             shipping_cost = Decimal('0.00')
         else:
             shipping_cost = shipping_method.rate_usd
@@ -145,15 +146,33 @@ class CheckoutService:
         )
 
         if payment_method == 'KHQR':
-            # Generate simulated Bakong KHQR dynamic payload
-            payment.khqr_payload = f"00020101021229370016bakong@abaa00010108CLOTHES0208{order.total_khr}53031165406{total_usd}5802KH6304"
-            payment.khqr_md5 = uuid.uuid4().hex
-            payment.save(update_fields=['khqr_payload', 'khqr_md5'])
+            bakong_account = getattr(settings, 'BAKONG_ACCOUNT_ID', 'clothes@abaa')
+            merchant_name = getattr(settings, 'BAKONG_MERCHANT_NAME', 'DevClothes')
+            merchant_city = getattr(settings, 'BAKONG_MERCHANT_CITY', 'Phnom Penh')
+            phone_number = getattr(settings, 'BAKONG_PHONE_NUMBER', '')
+
+            # Generate EMVCo compliant Dynamic KHQR payload using loaded merchant credentials
+            payload = generate_khqr_payload(
+                bakong_account_id=bakong_account,
+                merchant_name=merchant_name,
+                merchant_city=merchant_city,
+                amount=total_usd,
+                currency='USD',
+                bill_number=order.order_number,
+                store_label=merchant_name,
+                phone_number=phone_number,
+            )
+            md5_hash = generate_khqr_md5(payload)
+
+            payment.khqr_payload = payload
+            payment.khqr_md5 = md5_hash
+            payment.transaction_reference = md5_hash
+            payment.save(update_fields=['khqr_payload', 'khqr_md5', 'transaction_reference'])
 
             PaymentTransaction.objects.create(
                 payment=payment,
                 action='KHQR_GENERATED',
-                raw_data={'khqr_md5': payment.khqr_md5, 'amount_usd': str(total_usd)}
+                raw_data={'khqr_md5': md5_hash, 'amount_usd': str(total_usd)}
             )
 
         # 8. Clear purchased items from cart if cart provided

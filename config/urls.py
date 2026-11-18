@@ -13,7 +13,11 @@ from apps.orders.views import (
     CheckoutView,
     OrderDetailView,
 )
-from apps.payments.views import PaymentVerifyView
+from apps.payments.views import (
+    PaymentStatusView,
+    PaymentVerifyView,
+    KHQRGenerateView,
+)
 
 router = DefaultRouter()
 router.register(r'catalog/products', ProductViewSet, basename='products')
@@ -35,6 +39,8 @@ urlpatterns = [
     path('api/v1/orders/checkout/', CheckoutView.as_view(), name='order-checkout'),
     path('api/v1/orders/<str:order_number>/', OrderDetailView.as_view(), name='order-detail'),
 
-    # Payments
+    # Payments & Bakong KHQR
+    path('api/v1/payments/<uuid:payment_id>/status/', PaymentStatusView.as_view(), name='payment-status'),
     path('api/v1/payments/<uuid:payment_id>/verify/', PaymentVerifyView.as_view(), name='payment-verify'),
+    path('api/v1/payments/khqr/generate/', KHQRGenerateView.as_view(), name='khqr-generate'),
 ]

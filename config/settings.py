@@ -2,11 +2,29 @@
 Django settings for ecommerce-django-backend.
 """
 
+import os
 from pathlib import Path
 from decimal import Decimal
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env (privacy-preserved)
+try:
+    from dotenv import load_dotenv
+    for env_candidate in [
+        BASE_DIR / '.env',
+        BASE_DIR / '.env.local',
+        BASE_DIR.parent / '.env',
+        BASE_DIR.parent.parent / '.env',
+        BASE_DIR.parent.parent / '.env.local',
+        BASE_DIR.parent.parent / 'ec-online-shop' / '.env.local',
+        BASE_DIR.parent.parent / 'ec-online-shop' / '.env',
+    ]:
+        if env_candidate.exists():
+            load_dotenv(env_candidate, override=True)
+except Exception:
+    pass
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-clothes-ctrl-ecommerce-development-secret-key-replace-in-prod'
@@ -70,7 +88,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
-# Normalized SQLite for zero-friction local development, easily switchable to Postgres
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -104,7 +121,6 @@ TIME_ZONE = 'Asia/Phnom_Penh'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
@@ -127,3 +143,46 @@ REST_FRAMEWORK = {
 # Currency configuration for Cambodia
 KHR_EXCHANGE_RATE = 4100
 DEFAULT_TAX_RATE = Decimal('0.10') # 10% VAT
+
+# National Bank of Cambodia (NBC) Bakong KHQR Settings (loaded from .env)
+BAKONG_ACCOUNT_ID = (
+    os.environ.get('BAKONG_ACCOUNT_ID') or
+    os.environ.get('BAKONG_ACCOUNT') or
+    os.environ.get('MERCHANT_BAKONG_ID') or
+    os.environ.get('BAKONG_MERCHANT_ID') or
+    os.environ.get('BAKONG_ID') or
+    os.environ.get('ACCOUNT_ID') or
+    'clothes@abaa'
+).strip()
+
+BAKONG_MERCHANT_NAME = (
+    os.environ.get('BAKONG_MERCHANT_NAME') or
+    os.environ.get('MERCHANT_NAME') or
+    os.environ.get('BAKONG_NAME') or
+    'Clothes Apparel Co'
+).strip()
+
+BAKONG_MERCHANT_CITY = (
+    os.environ.get('BAKONG_MERCHANT_CITY') or
+    os.environ.get('MERCHANT_CITY') or
+    'Phnom Penh'
+).strip()
+
+BAKONG_PHONE_NUMBER = (
+    os.environ.get('BAKONG_PHONE_NUMBER') or
+    os.environ.get('PHONE_NUMBER') or
+    os.environ.get('MERCHANT_PHONE') or
+    ''
+).strip()
+
+BAKONG_API_URL = (
+    os.environ.get('BAKONG_API_URL') or
+    'https://api-bakong.nbc.gov.kh/v1/'
+).strip()
+
+BAKONG_API_TOKEN = (
+    os.environ.get('BAKONG_API_TOKEN') or
+    os.environ.get('BAKONG_TOKEN') or
+    os.environ.get('API_TOKEN') or
+    ''
+).strip()
