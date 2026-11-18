@@ -52,7 +52,7 @@ def generate_khqr_payload(
     amount: Decimal,
     currency: str = "USD",
     bill_number: str = "",
-    store_label: str = "Clothes",
+    store_label: str = "DevClothes",
     phone_number: str = "",
     terminal_label: str = "",
     acquiring_bank: str = "",

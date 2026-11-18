@@ -147,7 +147,7 @@ class CheckoutService:
 
         if payment_method == 'KHQR':
             bakong_account = getattr(settings, 'BAKONG_ACCOUNT_ID', 'clothes@abaa')
-            merchant_name = getattr(settings, 'BAKONG_MERCHANT_NAME', 'Clothes Apparel Co')
+            merchant_name = getattr(settings, 'BAKONG_MERCHANT_NAME', 'DevClothes')
             merchant_city = getattr(settings, 'BAKONG_MERCHANT_CITY', 'Phnom Penh')
             phone_number = getattr(settings, 'BAKONG_PHONE_NUMBER', '')
 

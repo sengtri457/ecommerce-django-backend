@@ -69,7 +69,7 @@ class KHQRGenerateView(APIView):
             return Response({'error': 'Amount is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
         bakong_account = getattr(settings, 'BAKONG_ACCOUNT_ID', 'clothes@abaa')
-        merchant_name = getattr(settings, 'BAKONG_MERCHANT_NAME', 'Clothes Apparel Co')
+        merchant_name = getattr(settings, 'BAKONG_MERCHANT_NAME', 'DevClothes')
         merchant_city = getattr(settings, 'BAKONG_MERCHANT_CITY', 'Phnom Penh')
 
         payload = generate_khqr_payload(
@@ -79,7 +79,7 @@ class KHQRGenerateView(APIView):
             amount=Decimal(str(amount)),
             currency=currency,
             bill_number=bill_number,
-            store_label='Clothes'
+            store_label='DevClothes'
         )
         md5_hash = generate_khqr_md5(payload)
 
